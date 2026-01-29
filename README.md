@@ -6,11 +6,11 @@
 4. Procedimientos sugeridos (para “claim” y para registrar ejecuciones)
 5. Buenas prácticas y puntos críticos
 
-#1 Modelo de datos recomendado
-##1.1. Tabla principal: EventTriggers (definición del evento)
+# 1 Modelo de datos recomendado
+## 1.1. Tabla principal: EventTriggers (definición del evento)
 Objetivo: contener qué ejecutar, cuándo ejecutar, cómo reintentar y estado.
 Punto clave: usar NextRunAtUtc te simplifica muchísimo el worker: solo consulta “dame los triggers habilitados con NextRunAtUtc <= ahora y no bloqueados”.
-##1.2. Tabla de historial: EventTriggerRuns (cada ejecución)
+## 1.2. Tabla de historial: EventTriggerRuns (cada ejecución)
 Objetivo: trazabilidad, auditoría, debug y métricas.
 #2 ¿Cómo calcular “cuándo toca”? (Schedule semantics)
 Te recomiendo un enfoque híbrido:
@@ -47,8 +47,8 @@ Node calcula la siguiente ocurrencia “cron” (en UTC o en TimeZoneId).
 Guardas el resultado en NextRunAtUtc.
 
 
-#3 Flujo de trabajo (end-to-end)
-##3.1. Worker Node.js (polling + locking)
+# 3 Flujo de trabajo (end-to-end)
+## 3.1. Worker Node.js (polling + locking)
 Ciclo típico (cada X segundos):
 
 GETDATE en UTC (Node usa new Date() pero conviertes a UTC).
@@ -83,20 +83,20 @@ Si supera MaxRetries: deshabilita o marca como Failed permanente
 ##3.2. ¿Por qué el “lease” (LockedUntilUtc)?
 Si el worker muere a mitad, el lock expira y otro worker puede reintentar.
 
-#4 Procedimientos almacenados sugeridos (SQL)
-##4.1. usp_ClaimDueTriggers (claim atómico)
+# 4 Procedimientos almacenados sugeridos (SQL)
+## 4.1. usp_ClaimDueTriggers (claim atómico)
 Esto te evita carreras si tienes varios workers.
 
 Notas:
 READPAST evita que un worker se quede esperando filas bloqueadas por otro.
 UPDLOCK garantiza que nadie más “clame” la misma fila.
 
-##4.2. usp_ReportTriggerRunResult (actualizar estado + next run)
+## 4.2. usp_ReportTriggerRunResult (actualizar estado + next run)
 En lugar de hacer muchas queries desde Node, puedes encapsularlo.
 Para CRON: lo habitual es que Node calcule la siguiente fecha y la pase a un SP tipo usp_SetNextRunAt(@TriggerId, @NextRunAtUtc) o ampliarlo con un parámetro @NextRunAtUtc en este SP.
 
 
-#5 Seguridad (muy importante)
+# 5 Seguridad (muy importante)
 Como vas a ejecutar un SP cuyo nombre viene de tabla:
 
 No construyas SQL dinámico libre tipo EXEC(@sql) en Node.
@@ -116,15 +116,11 @@ Limita permisos:
 El usuario SQL del worker solo puede ejecutar usp_ClaimDueTriggers, usp_ReportTriggerRunResult y los SP “permitidos”.
 Ideal: firmar SP con certificado o usar roles.
 
-
-
-
-#6 Resumen del flujo (diagrama mental)
+# 6 Resumen del flujo (diagrama mental)
 
 Node Worker (cada 1–5s o 10s):
 
 usp_ClaimDueTriggers(@NowUtc, @WorkerId, @MaxToClaim)
-
 
 Para cada trigger “claimed”:
 
