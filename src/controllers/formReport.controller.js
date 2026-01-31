@@ -1,7 +1,8 @@
+const { MAX } = require('mssql');
 const { sql, getPool } = require('../database');
 
 // Obtener todos los formularios
-async function getForms(req, res) {
+async function getAll(req, res) {
   try {
     const {
       search = null,
@@ -26,50 +27,68 @@ async function getForms(req, res) {
       .input('OrderDir', sql.NVarChar(4), orderDir)
       .input('PageNumber', sql.Int, pageNumber)
       .input('PageSize', sql.Int, pageSize)
-      .execute('usp_S_Forms_List');
+      .execute('usp_S_FormReports_List');
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
 
-// Obtener un formulario por ID
-async function getFormById(req, res) {
+// Obtener un formulario por ID y sus atributos
+async function getOne(req, res) {
   try {
     const { id } = req.params;
     const pool = await getPool();
     const result = await pool.request()
       .input('Id', sql.UniqueIdentifier, id)
-      .execute('usp_S_Forms_GetById');
+      .execute('usp_S_FormReports_GetById');
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'Formulario no encontrado' });
     }
-    res.json(result.recordset[0]);
+    res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
 
 // Crear un nuevo formulario
-async function createForm(req, res) {
+async function add(req, res) {
+    console.log('Crear un nuevo formulario - Payload:', req.body);
   try {
-    const { title, description, createdBy, status } = req.body;    
+    const { name, formId, description, createdBy, status = 'new' } = req.body;    
     const pool = await getPool();
     const result = await pool.request()
-      .input('Title', sql.NVarChar(200), title)
-      .input('Description', sql.NVarChar(sql.MAX), description)
+      .input('Name', sql.NVarChar(200), name)
+      .input('FormId', sql.UniqueIdentifier, formId)
+      .input('Description', sql.NVarChar(MAX), description)
       .input('CreatedBy', sql.NVarChar(100), createdBy)
       .input('Status', sql.NVarChar(20), status)
       .input('ReturnInserted', sql.Bit, 1)
-      .execute('usp_I_Forms');
+      .execute('usp_I_FormReport');
     res.status(201).json(result.recordset[0]);
   } catch (err) {
+    console.error('Error al crear un nuevo formulario:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// Crear un nuevo formulario
+async function submit(req, res) {
+    console.log('submit form:', req.body);
+  try {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('Json', sql.NVarChar(MAX), JSON.stringify(req.body))
+      .execute('usp_I_FormReportResults');
+    res.status(201).json(result.recordset[0]);
+  } catch (err) {
+    console.error('Error al enviar un formulario:', err);
     res.status(500).json({ error: err.message });
   }
 }
 
 // Actualizar un formulario
-async function updateForm(req, res) {
+async function update(req, res) {
   try {
     const { id } = req.params;
     const { title, description, status, correlationId } = req.body;
@@ -90,27 +109,8 @@ async function updateForm(req, res) {
   }
 }
 
-// Publicar un formulario
-async function publishForm(req, res) {
-  try {
-    const { id } = req.params;
-    const { correlationId } = req.body;
-    const pool = await getPool();
-    const result = await pool.request()
-      .input('Id', sql.UniqueIdentifier, id)
-      .input('CorrelationId', sql.UniqueIdentifier, correlationId)
-      .execute('usp_U_Forms_Publish');
-    if (result.recordset.length === 0) {
-      return res.status(404).json({ error: 'Formulario no encontrado' });
-    }
-    res.json(result.recordset[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
-
 // Eliminar un formulario
-async function deleteForm(req, res) {
+async function remove(req, res) {
   try {
     const { id } = req.params;
     const { correlationId } = req.body;
@@ -129,10 +129,10 @@ async function deleteForm(req, res) {
 }
 
 module.exports = {
-  getForms,
-  getFormById,
-  createForm,
-  updateForm,
-  publishForm,
-  deleteForm
+  getAll,
+  getOne,
+  add,
+  submit,
+  update,
+  remove
 };
