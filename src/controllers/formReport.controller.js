@@ -90,16 +90,18 @@ async function submit(req, res) {
 // Actualizar un formulario
 async function update(req, res) {
   try {
+    console.log('Update form - Payload:', req.body);
     const { id } = req.params;
-    const { title, description, status, correlationId } = req.body;
+    const { description, status, optionsJson, assignedTo, reviewer } = req.body;
     const pool = await getPool();
     const result = await pool.request()
       .input('Id', sql.UniqueIdentifier, id)
-      .input('Title', sql.NVarChar(200), title)
       .input('Description', sql.NVarChar(sql.MAX), description)
       .input('Status', sql.NVarChar(20), status)
-      .input('CorrelationId', sql.UniqueIdentifier, correlationId)
-      .execute('usp_U_Forms_Update');
+      .input('OptionsJson', sql.NVarChar(sql.MAX), optionsJson)
+      .input('AssignedTo', sql.NVarChar(100), assignedTo)
+      .input('Reviewer', sql.NVarChar(100), reviewer)
+      .execute('usp_U_FormReports_Update');
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'Formulario no encontrado' });
     }
@@ -118,7 +120,7 @@ async function remove(req, res) {
     const result = await pool.request()
       .input('Id', sql.UniqueIdentifier, id)
       .input('CorrelationId', sql.UniqueIdentifier, correlationId)
-      .execute('usp_D_Forms_Delete');
+      .execute('usp_D_FormReports_Delete');
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'Formulario no encontrado' });
     }

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const formAttributesController = require('../controllers/formAttributesController');
+const formAttributesController = require('../controllers/formAttributes.controller');
 
 router.get('/', formAttributesController.getFormAttributes);
 router.get('/:id', formAttributesController.getAttributeById);

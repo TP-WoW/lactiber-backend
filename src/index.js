@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const formsRoutes = require('./routes/forms');
-const formAttributesRoutes = require('./routes/formAttributes');
+const formsRoutes = require('./routes/forms.route');
+const formAttributesRoutes = require('./routes/formAttributes.route');
 const formReportsRoutes = require('./routes/formReport.route');
 const loginRoutes = require('./routes/login.route');
 const { testSqlConnection } = require('./database');
