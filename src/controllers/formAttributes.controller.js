@@ -81,6 +81,7 @@ async function addFormAttribute(req, res) {
     tvp.columns.add("CreatedAt", sql.DateTime2(3), { nullable: true });
     tvp.columns.add("CreatedBy", sql.NVarChar(100), { nullable: true });
     tvp.columns.add("OptionsJson", sql.NVarChar(sql.MAX), { nullable: true });
+    tvp.columns.add("SampleConfigJson", sql.NVarChar(sql.MAX), { nullable: true });
 
     items.forEach((item, idx) => {
       tvp.rows.add(
@@ -101,6 +102,7 @@ async function addFormAttribute(req, res) {
         item.createdAt ?? null,
         item.createdBy ?? null,
         item.optionsJson ?? null,
+        item.sampleConfigJson ?? null,
       );
     });
 
@@ -147,6 +149,7 @@ async function updateFormAttribute(req, res) {
     tvp.columns.add("DefaultValue", sql.NVarChar(50), { nullable: true });
     tvp.columns.add("OrderIndex", sql.Int, { nullable: false });
     tvp.columns.add("OptionsJson", sql.NVarChar(sql.MAX), { nullable: true });
+    tvp.columns.add("SampleConfigJson", sql.NVarChar(sql.MAX), { nullable: true });
 
     items.forEach((item) => {
       tvp.rows.add(
@@ -165,6 +168,7 @@ async function updateFormAttribute(req, res) {
         item.DefaultValue ?? null,
         item.OrderIndex,
         item.OptionsJson ?? null,
+        item.SampleConfigJson ?? null,
       );
     });
 
